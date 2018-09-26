@@ -74,3 +74,9 @@ A Glyph is an individual mark that often corresponds to a character. Some glyphs
 * `font`: A reference to the `Font` object.
 * `name`: The glyph name (e.g. "Aring", "five")
 * `advanceWidth`: The width to advance the pen when drawing this glyph.
+
+##### `Glyph.getPath(x, y, fontSize)`
+Get a scaled glyph Path object we can draw on a drawing context.
+* `x`: Horizontal position of the glyph. (default: 0)
+* `y`: Vertical position of the *baseline* of the glyph. (default: 0)
+* `fontSize`: Font size in pixels (default: 72).

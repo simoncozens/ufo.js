@@ -20,6 +20,10 @@ Font.prototype.defaultRenderOptions = {
     // }
 };
 
+Font.prototype.getGlyph = function (name) {
+  return new Glyph({font: this, name: name })
+}
+
 Font.prototype.glyphFileFromName = function (name) {
   var filename = this.glyphtable[name]
   if (!filename) { throw "Glyph '"+name+"' not found in glyph table" }
@@ -30,7 +34,7 @@ Font.prototype.stringToGlyphs = function(s, options) {
   options = options || this.defaultRenderOptions;
   var array = s.split(/\/([\w\.]+)\s?|/).filter(Boolean)
   if (options.features) { throw "Sorry, features not implemented yet" }
-  return array.map( (s) => new Glyph({font: this, name: s }))
+  return array.map( (s) => this.getGlyph(s) )
 }
 
 Font.prototype._findGroups = function (glyphname) {
