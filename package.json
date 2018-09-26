@@ -1,9 +1,14 @@
 {
   "name": "ufo.js",
   "version": "0.0.2",
-  "repo": "https://github.com/simoncozens/ufo.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simoncozens/ufo.js.git"
+  },
+  "homepage": "https://github.com/simoncozens/ufo.js#readme",
   "description": "UFO font parser",
   "main": "dist/ufo.js",
+  "types": "./index.d.ts",
   "module": "src/ufo.js",
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha --require reify --compilers js:buble/register --recursive && jshint . && jscs .",
