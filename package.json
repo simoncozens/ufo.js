@@ -1,6 +1,7 @@
 {
   "name": "ufo.js",
-  "version": "1.0.0",
+  "version": "0.0.2",
+  "repo": "https://github.com/simoncozens/ufo.js",
   "description": "UFO font parser",
   "main": "dist/ufo.js",
   "module": "src/ufo.js",
