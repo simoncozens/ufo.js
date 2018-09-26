@@ -113,6 +113,15 @@ Font.prototype.forEachGlyph = function(text, x, y, fontSize, options, callback) 
   })
 }
 
+Font.prototype.draw = function(ctx, text, x, y, fontSize, options) {
+  this.forEachGlyph(text, x, y, fontSize, options,
+    function (glyph, gX, gY, gFontSize) {
+      glyph.getPath(gX,gY,gFontSize,options).then(p => p.draw(ctx))
+    }
+  )
+};
+
+
 Font.prototype.getAdvanceWidth = function(text, fontSize, options) {
     return this.forEachGlyph(text, 0, 0, fontSize, options, function() {});
 };

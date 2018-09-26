@@ -1,6 +1,6 @@
 import Promise from 'bluebird';
-import plist from 'plist';
-var parseString = require('xml2js').parseString;
+import { parse } from 'plist/lib/parse';
+import { parseString } from 'xml2js/lib/parser';
 
 // Scaffolding for reading some files in a cross-platform way
 
@@ -37,7 +37,7 @@ function openUrl (url, options) {
 }
 
 function openPlist (url, options) {
-  return openUrl(url,options).then( (d) => plist.parse(d) )
+  return openUrl(url,options).then( (d) => parse(d) )
 }
 
 function openXML (url, options) {
