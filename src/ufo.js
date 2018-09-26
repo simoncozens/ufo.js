@@ -14,7 +14,10 @@ function load(url, callback, options) {
   openPlist(url+"/metainfo.plist", options)
   .then( (o) => { font.metainfo = o })
   .then( () => openPlist(url+"/fontinfo.plist", options) )
-  .then( (o) => font.fontinfo = o)
+  .then( (o) => {
+    font.fontinfo = o
+    font.unitsPerEm = font.fontinfo.unitsPerEm
+  })
   .then( () => openPlist(url+"/glyphs/contents.plist", options) )
   .then( (o) => font.glyphtable = o)
   .then( () => {

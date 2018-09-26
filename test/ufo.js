@@ -34,5 +34,21 @@ describe('Kerning', function() {
       expect(font.getKerningValue("Gamma", "Upsilon")).to.equal(7)
     })
   })
+})
+
+describe('Advance Widths', function() {
+  it('can read advance widths with no kerning', function() {
+    ufo.load("./fonts/Roboto-Black.ufo", function (err, font) {
+      if (err) { throw err }
+      expect(font.getAdvanceWidth("HO",72)).to.eventually.equal(100.30078125)
+      expect(font.getAdvanceWidth("AV",72, {kerning:false})).to.eventually.equal(96.64453125)
+    })
+  })
+  it('can read advance widths with kerning', function() {
+    ufo.load("./fonts/Roboto-Black.ufo", function (err, font) {
+      if (err) { throw err }
+      expect(font.getAdvanceWidth("AV",72, {kerning:true})).to.eventually.equal(93.9375)
+    })
+  })
 
 })

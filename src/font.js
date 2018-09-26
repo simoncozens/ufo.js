@@ -76,4 +76,41 @@ Font.prototype.getKerningValue = function(leftGlyph, rightGlyph) {
   }
   return null
 }
+
+Font.prototype.forEachGlyph = function(text, x, y, fontSize, options, callback) {
+  x = x !== undefined ? x : 0;
+  y = y !== undefined ? y : 0;
+  fontSize = fontSize !== undefined ? fontSize : 72;
+  options = options || this.defaultRenderOptions;
+  const fontScale = 1 / this.unitsPerEm * fontSize;
+  const glyphs = this.stringToGlyphs(text, options);
+  let kerningLookups;
+  // Ensure all glyphs are loaded
+  return Promise.all(glyphs.map(g => g.load())).then( () => {
+    for (let i = 0; i < glyphs.length; i += 1) {
+      const glyph = glyphs[i];
+      callback.call(this, glyph, x, y, fontSize, options);
+      if (glyph._advanceWidth) {
+        x += glyph._advanceWidth * fontScale;
+      }
+
+      if (options.kerning && i < glyphs.length - 1) {
+        const kerningValue = this.getKerningValue(glyph, glyphs[i + 1]);
+        x += kerningValue * fontScale;
+      }
+
+      if (options.letterSpacing) {
+        x += options.letterSpacing * fontSize;
+      } else if (options.tracking) {
+        x += (options.tracking / 1000) * fontSize;
+      }
+    }
+    return x;
+  })
+}
+
+Font.prototype.getAdvanceWidth = function(text, fontSize, options) {
+    return this.forEachGlyph(text, 0, 0, fontSize, options, function() {});
+};
+
 export default Font;

@@ -1,32 +1,24 @@
 import Promise from 'bluebird';
 import { openXML } from './loader';
 
-function transformAdvance (n) {
-  return Number(n[0]["$"]["width"])
-}
-
 function Glyph(options) {
   this.name = options.name
   this.font = options.font
   this.url  = this.font.glyphFileFromName(this.name)
   this.loaded = false
   Object.defineProperty(this, "advanceWidth", {
-    get: function () { return this.lazyLoad("advanceWidth", "advance").then(transformAdvance) }
+    get: function () { return this.load().then( (s) => s["_advanceWidth"] ) }
   })
 }
 
-Glyph.prototype.lazyLoad = function (p,s) {
-  if (this.loaded) {
-    delete this[p]
-    this[p] = this.fromSource[s]
-    return Promise.resolve(this[p])
-  }
+Glyph.prototype.load = function() {
+  if (this.loaded) { return Promise.resolve(this) }
   return openXML(this.url, this.font.loadOptions).then( (data) => {
-      this.loaded = true
-      this.fromSource = data.glyph
-      return Promise.resolve(data.glyph[s])
-    }
-  )
+    this.loaded = true
+    this.fromSource = data.glyph
+    this._advanceWidth = Number(data.glyph.advance[0]["$"]["width"])
+    return this
+  })
 }
 
 export default Glyph
