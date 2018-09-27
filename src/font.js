@@ -8,6 +8,7 @@ function Font(options) {
         console.log("Grumble")
     }
     this.root = options.root
+    this._glyphCache = {}
     // XXX
 }
 
@@ -21,7 +22,8 @@ Font.prototype.defaultRenderOptions = {
 };
 
 Font.prototype.getGlyph = function (name) {
-  return new Glyph({font: this, name: name })
+  if (!this._glyphCache[name]) this._glyphCache[name] = new Glyph({font: this, name: name })
+  return this._glyphCache[name]
 }
 
 Font.prototype.glyphFileFromName = function (name) {

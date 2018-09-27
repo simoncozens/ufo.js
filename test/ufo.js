@@ -48,6 +48,9 @@ describe('Advance Widths', function() {
     ufo.load("./fonts/Roboto-Black.ufo", function (err, font) {
       if (err) { throw err }
       expect(font.getAdvanceWidth("AV",72, {kerning:true})).to.eventually.equal(93.9375)
+      expect(font.getAdvanceWidth("AV",72, {kerning:true})).to.eventually.equal(93.9375)
+      expect(font.getAdvanceWidth("AV",72, {kerning:true})).to.eventually.equal(93.9375)
+      expect(font.getAdvanceWidth("AV",72, {kerning:true})).to.eventually.equal(93.9375)
     })
   })
 
