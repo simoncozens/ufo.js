@@ -9,7 +9,18 @@ export as namespace opentype;
  * FONT
  ******************************************/
 
+export interface FontInfo {
+    familyName: string;         // Family name.
+    styleName: string;          // Style name.
+    styleMapFamilyName: string; // Family name used for bold, italic and bold italic style mapping.
+    styleMapStyleName: string;  // Style map style. The possible values are regular, italic, bold and bold italic. These are case sensitive.
+    versionMajor: number;       // Major version.
+    versionMinor: number;       // Minor version.
+    year: number;               // The year the font was created. This attribute is deprecated as of version 2. It’s presence should not be relied upon by applications. However, it may occur in a font’s info so applications should preserve it if present.
+}
+
 export class Font {
+    fontinfo: FontInfo;
     unitsPerEm: number;
     ascender: number;
     descender: number;
