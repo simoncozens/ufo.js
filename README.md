@@ -45,6 +45,8 @@ A Font represents a loaded UFO font file. It contains a set of glyphs and method
 * `groups`: A list of kerning groups, if supplied
 * `kerning`: The kern table, if supplied
 * `glyphtable`: A list of available glyphs
+* `ascender`: Distance from baseline of highest ascender. In font units, not pixels.
+* `descender`: Distance from baseline of lowest descender. In font units, not pixels.
 
 #### `Font.stringToGlyphs(string)`
 Convert the string to a list of glyph objects.
@@ -74,9 +76,50 @@ A Glyph is an individual mark that often corresponds to a character. Some glyphs
 * `font`: A reference to the `Font` object.
 * `name`: The glyph name (e.g. "Aring", "five")
 * `advanceWidth`: The width to advance the pen when drawing this glyph.
+* `unicodes`: The list of unicode values for this glyph (most of the time this will be 1, can also be empty).
 
 ##### `Glyph.getPath(x, y, fontSize)`
-Get a scaled glyph Path object we can draw on a drawing context.
+Get *a promise to* a scaled glyph Path object we can draw on a drawing context.
 * `x`: Horizontal position of the glyph. (default: 0)
 * `y`: Vertical position of the *baseline* of the glyph. (default: 0)
 * `fontSize`: Font size in pixels (default: 72).
+
+##### `Glyph.draw(ctx, x, y, fontSize)`
+Draw the glyph *asynchronously* on the given context.
+* `ctx`: The drawing context.
+* `x`: Horizontal position of the glyph. (default: 0)
+* `y`: Vertical position of the *baseline* of the glyph. (default: 0)
+* `fontSize`: Font size, in pixels (default: 72).
+
+
+### The Path object
+Once you have a path through `Font.getPath` or `Glyph.getPath`, you can use it.
+
+* `commands`: The path commands. Each command is a dictionary containing a type and coordinates. See below for examples.
+* `fill`: The fill color of the `Path`. Color is a string representing a [CSS color](https://developer.mozilla.org/en-US/docs/Web/CSS/color_value). (default: 'black')
+* `stroke`: The stroke color of the `Path`. Color is a string representing a [CSS color](https://developer.mozilla.org/en-US/docs/Web/CSS/color_value). (default: `null`: the path will not be stroked)
+* `strokeWidth`: The line thickness of the `Path`. (default: 1, but since the `stroke` is null no stroke will be drawn)
+
+##### `Path.draw(ctx)`
+Draw the path on the given 2D context. This uses the `fill`, `stroke` and `strokeWidth` properties of the `Path` object.
+* `ctx`: The drawing context.
+
+##### `Path.getBoundingBox()`
+Calculate the minimum bounding box for the given path. Returns an `opentype.BoundingBox` object that contains x1/y1/x2/y2.
+If the path is empty (e.g. a space character), all coordinates will be zero.
+
+##### `Path.toPathData(decimalPlaces)`
+Convert the Path to a string of path data instructions.
+See http://www.w3.org/TR/SVG/paths.html#PathData
+* `decimalPlaces`: The amount of decimal places for floating-point values. (default: 2)
+
+##### `Path.toSVG(decimalPlaces)`
+Convert the path to a SVG &lt;path&gt; element, as a string.
+* `decimalPlaces`: The amount of decimal places for floating-point values. (default: 2)
+
+#### Path commands
+* **Move To**: Move to a new position. This creates a new contour. Example: `{type: 'M', x: 100, y: 200}`
+* **Line To**: Draw a line from the previous position to the given coordinate. Example: `{type: 'L', x: 100, y: 200}`
+* **Curve To**: Draw a bézier curve from the current position to the given coordinate. Example: `{type: 'C', x1: 0, y1: 50, x2: 100, y2: 200, x: 100, y: 200}`
+* **Quad To**: Draw a quadratic bézier curve from the current position to the given coordinate. Example: `{type: 'Q', x1: 0, y1: 50, x: 100, y: 200}`
+* **Close**: Close the path. If stroked, this will draw a line from the first to the last point of the contour. Example: `{type: 'Z'}`

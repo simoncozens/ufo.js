@@ -10,6 +10,10 @@ function Glyph(options) {
   Object.defineProperty(this, "advanceWidth", {
     get: function () { return this.load().then( (s) => s["_advanceWidth"] ) }
   })
+  Object.defineProperty(this, "unicodes", {
+    get: function () { return this.load().then( (s) => s["_unicodes"] ) }
+  })
+
   Object.defineProperty(this, "outline", {
     get: function () { return this.load().then( (s) => s["_outline"] ) }
   })
@@ -22,6 +26,7 @@ Glyph.prototype.load = function() {
     this.loaded = true
     this.fromSource = data.glyph
     this._advanceWidth = Number(data.glyph.advance[0]["$"]["width"])
+    this._unicodes = data.glyph.unicode.map( (x) => parseInt(x["$"]["hex"],16) )
     this._outline = data.glyph.outline[0]
     this._components = this._outline.component || []
     this._components = this._components.map( (c) => c["$"])
@@ -97,5 +102,9 @@ Glyph.prototype.getPath = function (x, y, fontSize, options) {
       return path
     })
 }
+
+Glyph.prototype.draw = function(ctx, x, y, fontSize, options) {
+    this.getPath(x, y, fontSize, options).then((path) => path.draw(ctx));
+};
 
 export default Glyph

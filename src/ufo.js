@@ -16,6 +16,8 @@ function load(url, callback, options) {
   .then( () => openPlist(url+"/fontinfo.plist", options) )
   .then( (o) => {
     font.fontinfo = o
+    font.ascender = font.fontinfo.ascender
+    font.descender = font.fontinfo.descender
     font.unitsPerEm = font.fontinfo.unitsPerEm
   })
   .then( () => openPlist(url+"/glyphs/contents.plist", options) )

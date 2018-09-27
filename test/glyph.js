@@ -18,6 +18,7 @@ describe('Glyph reading', function() {
       expect(glyph["advanceWidth"]).to.eventually.equal(1187)
       expect(glyph["advanceWidth"]).to.eventually.equal(1187)
       expect(glyph["advanceWidth"]).to.eventually.equal(1187)
+      expect(glyph["unicodes"]).to.eventually.deep.equal([0x30])
     })
   })
 

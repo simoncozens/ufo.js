@@ -11,6 +11,8 @@ export as namespace opentype;
 
 export class Font {
     unitsPerEm: number;
+    ascender: number;
+    descender: number;
 
     readonly defaultRenderOptions: RenderOptions;
 
@@ -69,6 +71,7 @@ export class Glyph {
     name: string;
     font: Font;
     url: string;
+    unicodes: number[];
     loaded: boolean;
     advanceWidth: number;
     private outline;
@@ -76,8 +79,13 @@ export class Glyph {
     constructor(options: GlyphOptions);
 
     load(): Promise<Glyph>;
-
-
+    draw(
+        ctx: CanvasRenderingContext2D,
+        x?: number,
+        y?: number,
+        fontSize?: number,
+        options?: RenderOptions
+    ): void;
     getPath(
         x?: number,
         y?: number,
@@ -170,8 +178,12 @@ export type Substitution = (font: Font) => any;
 /******************************************
  * STATIC
  ******************************************/
+export interface FontLoadingOptions {
+    loadFn: (url: string) => Promise<string>
+}
 
 export function load(
     url: string,
-    callback: (error: any, font?: Font) => void
+    callback: (error: any, font?: Font) => void,
+    options?: FontLoadingOptions
 ): void;
