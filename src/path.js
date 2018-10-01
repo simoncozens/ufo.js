@@ -126,6 +126,21 @@ Path.prototype.close = Path.prototype.closePath = function() {
     });
 };
 
+function t(x,y,affine) {
+    let [a,b,c,d,tx,ty] = affine
+    return [a * x + c * y + tx, b * x + d * y + ty]
+}
+
+Path.prototype.transform = function(affine) {
+    for (let i = 0; i < this.commands.length; i++) {
+        const cmd = this.commands[i];
+        console.log(t(cmd.x, cmd.y, affine));
+        [cmd.x, cmd.y] = t(cmd.x, cmd.y, affine);
+        if (cmd.x1) { [cmd.x1, cmd.y1] = t(cmd.x1, cmd.y1, affine) }
+        if (cmd.x2) { [cmd.x2, cmd.y2] = t(cmd.x2, cmd.y2, affine) }
+    }
+    return this
+}
 /**
  * Add the given path or list of commands to the commands of this path.
  * @param  {Array} pathOrCommands - another opentype.Path, an opentype.BoundingBox, or an array of commands.
