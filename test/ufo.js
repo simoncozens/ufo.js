@@ -55,3 +55,14 @@ describe('Advance Widths', function() {
   })
 
 })
+
+describe('Load all glyphs', function() {
+  it('can load all glyphs', function() {
+    ufo.load("./fonts/Roboto-Black.ufo", function (err, font) {
+      if (err) { throw err }
+      font.loadAllGlyphs().then( () => {
+        expect(Object.keys(font._glyphCache).length).to.equal(3387)
+      })
+    })
+  })
+})

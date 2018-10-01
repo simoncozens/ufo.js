@@ -26,6 +26,10 @@ Font.prototype.getGlyph = function (name) {
   return this._glyphCache[name]
 }
 
+Font.prototype.loadAllGlyphs = function () {
+  return Promise.all(Object.keys(this.glyphtable).map( (g) => this.getGlyph(g).load() ))
+}
+
 Font.prototype.glyphFileFromName = function (name) {
   var filename = this.glyphtable[name]
   if (!filename) { throw "Glyph '"+name+"' not found in glyph table" }
@@ -36,6 +40,7 @@ Font.prototype.stringToGlyphs = function(s, options) {
   options = options || this.defaultRenderOptions;
   var array = s.split(/\/([\w\.]+)\s?|/).filter(Boolean)
   if (options.features) { throw "Sorry, features not implemented yet" }
+  // XXX This doesn't exactly do the right thing
   return array.map( (s) => this.getGlyph(s) )
 }
 
