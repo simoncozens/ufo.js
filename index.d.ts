@@ -21,6 +21,7 @@ export interface FontInfo {
 
 export class Font {
     fontinfo: FontInfo;
+    glyphtable: any;
     unitsPerEm: number;
     ascender: number;
     descender: number;
@@ -32,6 +33,7 @@ export class Font {
     getGlyph(name: string) : Glyph;
     glyphFileFromName(name: string): string;
     stringToGlyphs(s: string): Glyph[];
+    loadAllGlyphs() : Promise<Glyph[]>
     getKerningValue(
         leftGlyph: Glyph | string,
         rightGlyph: Glyph | string
