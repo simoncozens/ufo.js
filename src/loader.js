@@ -14,11 +14,11 @@ function _XHRtoPromise(url){
   const promise = new Promise((resolve, reject) => {
     xhr.onload = () => {
       if(xhr.readyState !== 4) return;
-      if(xhr.status === 200) resolve(xhr.responseText);
-      else reject(xhr.statusText);
+      if(xhr.status === 200) return resolve(xhr.responseText);
+      else return reject(new Error(xhr.statusText));
     }
     xhr.onerror = () => {
-      reject(xhr.statusText);
+      return reject(new Error(xhr.statusText));
     };
   });
 
