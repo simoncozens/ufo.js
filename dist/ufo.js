@@ -15038,11 +15038,11 @@
               var promise = new bluebird(function (resolve, reject) {
                 xhr.onload = function () {
                   if (xhr.readyState !== 4) return;
-                  if (xhr.status === 200) resolve(xhr.responseText);else reject(xhr.statusText);
+                  if (xhr.status === 200) return resolve(xhr.responseText);else return reject(new Error(xhr.statusText));
                 };
 
                 xhr.onerror = function () {
-                  reject(xhr.statusText);
+                  return reject(new Error(xhr.statusText));
                 };
               });
               xhr.open('GET', url);
@@ -15065,6 +15065,44 @@
 
             function openXML(url, options) {
               return openUrl(url, options).then(bluebird.promisify(parser_2));
+            }
+
+            function _slicedToArray(arr, i) {
+              return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();
+            }
+
+            function _arrayWithHoles(arr) {
+              if (Array.isArray(arr)) return arr;
+            }
+
+            function _iterableToArrayLimit(arr, i) {
+              var _arr = [];
+              var _n = true;
+              var _d = false;
+              var _e = undefined;
+
+              try {
+                for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+                  _arr.push(_s.value);
+
+                  if (i && _arr.length === i) break;
+                }
+              } catch (err) {
+                _d = true;
+                _e = err;
+              } finally {
+                try {
+                  if (!_n && _i["return"] != null) _i["return"]();
+                } finally {
+                  if (_d) throw _e;
+                }
+              }
+
+              return _arr;
+            }
+
+            function _nonIterableRest() {
+              throw new TypeError("Invalid attempt to destructure non-iterable instance");
             }
 
             // The Bounding Box object
@@ -15236,7 +15274,6 @@
               this.addBezier(x0, y0, cp1x, cp1y, cp2x, cp2y, x, y);
             };
 
-            // Geometric objects
             /**
              * A bézier path containing a set of path commands similar to a SVG path.
              * Paths can be drawn on a context using `draw`.
@@ -15365,6 +15402,52 @@
               this.commands.push({
                 type: 'Z'
               });
+            };
+
+            function t(x, y, affine) {
+              var _affine = _slicedToArray(affine, 6),
+                  a = _affine[0],
+                  b = _affine[1],
+                  c = _affine[2],
+                  d = _affine[3],
+                  tx = _affine[4],
+                  ty = _affine[5];
+
+              return [a * x + c * y + tx, b * x + d * y + ty];
+            }
+
+            Path.prototype.transform = function (affine) {
+              for (var i = 0; i < this.commands.length; i++) {
+                var cmd = this.commands[i];
+                console.log(t(cmd.x, cmd.y, affine));
+
+                var _t = t(cmd.x, cmd.y, affine);
+
+                var _t2 = _slicedToArray(_t, 2);
+
+                cmd.x = _t2[0];
+                cmd.y = _t2[1];
+
+                if (cmd.x1) {
+                  var _t3 = t(cmd.x1, cmd.y1, affine);
+
+                  var _t4 = _slicedToArray(_t3, 2);
+
+                  cmd.x1 = _t4[0];
+                  cmd.y1 = _t4[1];
+                }
+
+                if (cmd.x2) {
+                  var _t5 = t(cmd.x2, cmd.y2, affine);
+
+                  var _t6 = _slicedToArray(_t5, 2);
+
+                  cmd.x2 = _t6[0];
+                  cmd.y2 = _t6[1];
+                }
+              }
+
+              return this;
             };
             /**
              * Add the given path or list of commands to the commands of this path.
@@ -15588,6 +15671,13 @@
                   });
                 }
               });
+              Object.defineProperty(this, "unicodes", {
+                get: function get() {
+                  return this.load().then(function (s) {
+                    return s["_unicodes"];
+                  });
+                }
+              });
               Object.defineProperty(this, "outline", {
                 get: function get() {
                   return this.load().then(function (s) {
@@ -15607,13 +15697,26 @@
               return openXML(this.url, this.font.loadOptions).then(function (data) {
                 _this.loaded = true;
                 _this.fromSource = data.glyph;
-                _this._advanceWidth = Number(data.glyph.advance[0]["$"]["width"]);
+
+                if (data.glyph.advance) {
+                  _this._advanceWidth = Number(data.glyph.advance[0]["$"]["width"]);
+                }
+
+                _this._unicodes = (data.glyph.unicode || []).map(function (x) {
+                  return parseInt(x["$"]["hex"], 16);
+                });
+
+                if (_this._unicodes[0]) {
+                  // This is naughty and should be documented
+                  _this.font._glyphCache[String.fromCodePoint(_this._unicodes[0])] = _this;
+                }
+
                 _this._outline = data.glyph.outline[0];
                 _this._components = _this._outline.component || [];
                 _this._components = _this._components.map(function (c) {
                   return c["$"];
                 });
-                _this._contours = _this._outline.contour || [];
+                _this._contours = _this._outline && _this._outline.contour || [];
 
                 for (var cIdx in _this._contours) {
                   _this._contours[cIdx] = _this._contours[cIdx].point.map(function (p) {
@@ -15635,16 +15738,16 @@
               if (!options) options = {};
               var scale = 1 / this.font.unitsPerEm * fontSize;
               return this.load().then(function () {
-                if (_this2._components) {
-                  bluebird.all(_this2._components.map(function (g) {
-                    return _this2.font.getGlyph(g.base).load();
-                  }));
-                }
+                return bluebird.all(_this2._components.map(function (g) {
+                  return _this2.font.getGlyph(g.base).load();
+                }));
               }).then(function () {
                 // Place base components on path
                 return bluebird.all(_this2._components.map(function (c) {
-                  return _this2.font.getGlyph(c.base).getPath(x + scale * Number(c.xOffset || 0), y - scale * Number(c.yOffset || 0)).then(function (p) {
-                    return path.extend(p);
+                  var matrix1 = [Number(c.xScale || 1), Number(c.xyScale || 0), Number(c.yxScale || 0), -Number(c.yScale || 1), Number(c.xOffset || 0), Number(c.yOffset || 0)];
+                  var matrix2 = [scale, 0, 0, -scale, x, y];
+                  return _this2.font.getGlyph(c.base).getPath(0, 0, _this2.font.unitsPerEm).then(function (p) {
+                    path.extend(p.transform(matrix1).transform(matrix2));
                   });
                 }));
               }).then(function () {
@@ -15705,7 +15808,7 @@
                     }
                   };
 
-                  for (var _iterator = _this2._outline.contour[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                  for (var _iterator = _this2._contours[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
                     var c;
                     var firstOncurve;
                     var i;
@@ -15733,6 +15836,12 @@
               });
             };
 
+            Glyph.prototype.draw = function (ctx, x, y, fontSize, options) {
+              this.getPath(x, y, fontSize, options).then(function (path) {
+                return path.draw(ctx);
+              });
+            };
+
             function Font(options) {
               options = options || {};
 
@@ -15740,7 +15849,8 @@
                 console.log("Grumble");
               }
 
-              this.root = options.root; // XXX
+              this.root = options.root;
+              this._glyphCache = {}; // XXX
             }
 
             Font.prototype.defaultRenderOptions = {
@@ -15752,10 +15862,19 @@
             };
 
             Font.prototype.getGlyph = function (name) {
-              return new Glyph({
+              if (!this._glyphCache[name]) this._glyphCache[name] = new Glyph({
                 font: this,
                 name: name
               });
+              return this._glyphCache[name];
+            };
+
+            Font.prototype.loadAllGlyphs = function () {
+              var _this = this;
+
+              return bluebird.all(Object.keys(this.glyphtable).map(function (g) {
+                return _this.getGlyph(g).load();
+              }));
             };
 
             Font.prototype.glyphFileFromName = function (name) {
@@ -15769,17 +15888,18 @@
             };
 
             Font.prototype.stringToGlyphs = function (s, options) {
-              var _this = this;
+              var _this2 = this;
 
               options = options || this.defaultRenderOptions;
               var array = s.split(/\/([\w\.]+)\s?|/).filter(Boolean);
 
               if (options.features) {
                 throw "Sorry, features not implemented yet";
-              }
+              } // XXX This doesn't exactly do the right thing
+
 
               return array.map(function (s) {
-                return _this.getGlyph(s);
+                return _this2.getGlyph(s);
               });
             };
 
@@ -15936,7 +16056,7 @@
             };
 
             Font.prototype.forEachGlyph = function (text, x, y, fontSize, options, callback) {
-              var _this2 = this;
+              var _this3 = this;
 
               x = x !== undefined ? x : 0;
               y = y !== undefined ? y : 0;
@@ -15950,14 +16070,14 @@
               })).then(function () {
                 for (var i = 0; i < glyphs.length; i += 1) {
                   var glyph = glyphs[i];
-                  callback.call(_this2, glyph, x, y, fontSize, options);
+                  callback.call(_this3, glyph, x, y, fontSize, options);
 
                   if (glyph._advanceWidth) {
                     x += glyph._advanceWidth * fontScale;
                   }
 
                   if (options.kerning && i < glyphs.length - 1) {
-                    var kerningValue = _this2.getKerningValue(glyph, glyphs[i + 1]);
+                    var kerningValue = _this3.getKerningValue(glyph, glyphs[i + 1]);
 
                     x += kerningValue * fontScale;
                   }
@@ -15999,6 +16119,8 @@
                 return openPlist(url + "/fontinfo.plist", options);
               }).then(function (o) {
                 font.fontinfo = o;
+                font.ascender = font.fontinfo.ascender;
+                font.descender = font.fontinfo.descender;
                 font.unitsPerEm = font.fontinfo.unitsPerEm;
               }).then(function () {
                 return openPlist(url + "/glyphs/contents.plist", options);
