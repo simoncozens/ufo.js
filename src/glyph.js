@@ -25,12 +25,18 @@ Glyph.prototype.load = function() {
   return openXML(this.url, this.font.loadOptions).then( (data) => {
     this.loaded = true
     this.fromSource = data.glyph
-    this._advanceWidth = Number(data.glyph.advance[0]["$"]["width"])
-    this._unicodes = data.glyph.unicode.map( (x) => parseInt(x["$"]["hex"],16) )
+    if (data.glyph.advance) {
+      this._advanceWidth = Number(data.glyph.advance[0]["$"]["width"])
+    }
+    this._unicodes = (data.glyph.unicode||[]).map( (x) => parseInt(x["$"]["hex"],16) )
+    if (this._unicodes[0]) {
+      // This is naughty and should be documented
+      this.font._glyphCache[String.fromCodePoint(this._unicodes[0])] = this
+    }
     this._outline = data.glyph.outline[0]
     this._components = this._outline.component || []
     this._components = this._components.map( (c) => c["$"])
-    this._contours = this._outline.contour || []
+    this._contours = (this._outline && this._outline.contour) || []
     for (var cIdx in this._contours) {
       this._contours[cIdx] = this._contours[cIdx].point.map( (p) => p["$"] )
     }
@@ -48,22 +54,30 @@ Glyph.prototype.getPath = function (x, y, fontSize, options) {
 
   return this.load()
     .then( () => {
-      if (this._components) {
-        Promise.all(this._components.map( (g) => this.font.getGlyph(g.base).load() ))
-      }
+      return Promise.all(this._components.map( (g) => this.font.getGlyph(g.base).load() ))
     })
     .then( () => {
       // Place base components on path
       return Promise.all(
         this._components.map( (c) => {
-          return this.font.getGlyph(c.base).getPath(
-            x + scale*Number(c.xOffset||0),y - scale*Number(c.yOffset||0)
-          ).then( p => path.extend(p))
+          let matrix1 = [
+            Number(c.xScale||1),
+            Number(c.xyScale||0),
+            Number(c.yxScale||0),
+            -Number(c.yScale||1),
+            Number(c.xOffset||0),
+            Number(c.yOffset||0)
+          ]
+          let matrix2 = [ scale, 0, 0, -scale, x, y]
+          return this.font.getGlyph(c.base).getPath(0,0, this.font.unitsPerEm).then( p => {
+            path.extend(p.transform(matrix1).transform(matrix2))
+          }
+          )
         })
       )
     })
     .then( () => {
-      for (var c of this._outline.contour) {
+      for (var c of this._contours) {
         // For a closed path (as most should be) start with the first oncurve
         // if (c[0].type == "move") { throw "Open paths not supported yet"}
         var firstOncurve = c.findIndex( (p) => p.type != "offcurve" )
